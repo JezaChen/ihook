@@ -30,12 +30,12 @@ __all__ = [
 _HOOKED_MARK = '__hooked__'
 
 
-class PatchMethods(enum.StrEnum):
+class PatchMethods(enum.Enum):
     """ The patch methods.
 
     Now, we only support `PATCH_META_PATH`, where we patch the `sys.meta_path`.
     """
-    PATCH_META_PATH = 'patch_meta_path'
+    PATCH_META_PATH = enum.auto()
 
 
 _PATCH_METHOD = PatchMethods.PATCH_META_PATH
