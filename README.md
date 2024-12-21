@@ -2,6 +2,7 @@
 
 <div align="center">
 
+[![codecov](https://codecov.io/github/JezaChen/ihook/graph/badge.svg?token=DN5JNB0KIK)](https://codecov.io/github/JezaChen/ihook)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ihook?style=flat-square)
 ![GitHub](https://img.shields.io/github/license/jezachen/ihook)
 
