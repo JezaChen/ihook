@@ -1,2 +1,3 @@
 pytest ~= 8.2.0
+pytest-cov
 PyQt6 ~= 6.6.1

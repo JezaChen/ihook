@@ -1,4 +1,13 @@
-# ihook
+<h1 align="center">ihook</h1>
+
+<div align="center">
+
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ihook?style=flat-square)
+![GitHub](https://img.shields.io/github/license/jezachen/ihook)
+
+[中文文档](https://github.com/JezaChen/mumu-notion/blob/master/README_zh.md)
+
+</div>
 
 `ihook` is a Python module that allows you to configure functions to call when importing modules.
 It supports both case-sensitive and case-insensitive module names and can handle hooks for modules that are imported using methods of  `importlib`.
