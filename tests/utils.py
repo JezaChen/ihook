@@ -10,11 +10,17 @@ class ISensitiveConfigMixin:
     """ A mixin class for sensitive configurations """
     case_sensitive = True
 
-    def on_import_helper(self, name):
+    def on_import_decorator_helper(self, name):
         if self.case_sensitive:
             return ihook.on_import(name)
         else:
             return ihook.on_import(scramble_case(name), case_sensitive=False)
+
+    def on_import_direct_func_helper(self, name, func):
+        if self.case_sensitive:
+            return ihook.on_import(name, func)
+        else:
+            return ihook.on_import(scramble_case(name), func, case_sensitive=False)
 
 
 def unimport(module_name):

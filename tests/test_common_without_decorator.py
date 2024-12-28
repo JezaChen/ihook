@@ -19,10 +19,10 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         """ Test that on_import will trigger when the module is imported """
         triggered = False
 
-        @self.on_import_decorator_helper('hashlib')
         def on_hashlib_import():
             nonlocal triggered
             triggered = True
+        self.on_import_direct_func_helper('hashlib', on_hashlib_import)
 
         import hashlib  # noqa
         self.assertTrue(triggered)
@@ -31,10 +31,10 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         """ Test that on_import will trigger when the module is imported using `from ... import ...` """
         triggered = False
 
-        @self.on_import_decorator_helper('os')
         def on_os_import():
             nonlocal triggered
             triggered = True
+        self.on_import_direct_func_helper('os', on_os_import)
 
         from os import path
         self.assertTrue(triggered)
@@ -43,10 +43,10 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         """ Test that on_import will only trigger once when the module is imported multiple times """
         triggered = 0
 
-        @self.on_import_decorator_helper('hashlib')
         def on_hashlib_import():
             nonlocal triggered
             triggered += 1
+        self.on_import_direct_func_helper('hashlib', on_hashlib_import)
 
         import hashlib  # noqa
         import hashlib  # noqa
@@ -58,10 +58,10 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
 
         import hashlib  # noqa
 
-        @self.on_import_decorator_helper('hashlib')
         def on_hashlib_import():
             nonlocal triggered
             triggered = True
+        self.on_import_direct_func_helper('hashlib', on_hashlib_import)
 
         self.assertTrue(triggered)
 
@@ -69,10 +69,10 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         """ Test that on_import will not trigger when the module is not imported """
         triggered = False
 
-        @self.on_import_decorator_helper('hashlib')
         def on_hashlib_import():
             nonlocal triggered
             triggered = True
+        self.on_import_direct_func_helper('hashlib', on_hashlib_import)
 
         self.assertFalse(triggered)
 
@@ -84,10 +84,10 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         """ Test that on_import will not trigger when the module does not exist """
         triggered = False
 
-        @self.on_import_decorator_helper('does_not_exist')
         def on_does_not_exist_import():
             nonlocal triggered
             triggered = True
+        self.on_import_direct_func_helper('does_not_exist', on_does_not_exist_import)
 
         self.assertFalse(triggered)
 
@@ -95,10 +95,10 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         """ Test that on_import will trigger when the module is imported using importlib """
         triggered = False
 
-        @self.on_import_decorator_helper('hashlib')
         def on_importlib_import():
             nonlocal triggered
             triggered = True
+        self.on_import_direct_func_helper('importlib', on_importlib_import)
 
         import importlib
         importlib.import_module('hashlib')
@@ -108,10 +108,10 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         """ Test that on_import will trigger when the module is reloaded using importlib """
         triggered_cnt = 0
 
-        @self.on_import_decorator_helper('hashlib')
         def on_hashlib_reload():
             nonlocal triggered_cnt
             triggered_cnt += 1
+        self.on_import_direct_func_helper('hashlib', on_hashlib_reload)
 
         import hashlib
         self.assertEqual(triggered_cnt, 1)
@@ -131,10 +131,10 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         """
         triggered = False
 
-        @self.on_import_decorator_helper('os.path')
         def on_os_path_import(module):
             nonlocal triggered
             triggered = True
+        self.on_import_direct_func_helper('os.path', on_os_path_import)
 
         import os.path  # noqa
         self.assertTrue(triggered)
@@ -143,10 +143,10 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         # When we add a new hook, it should be triggered immediately
         triggered = False
 
-        @self.on_import_decorator_helper('os.path')
         def on_os_path_import2(module):
             nonlocal triggered
             triggered = True
+        self.on_import_direct_func_helper('os.path', on_os_path_import2)
 
         self.assertTrue(triggered)
 
@@ -160,10 +160,10 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         # When we add a new hook, it should be triggered immediately
         triggered = False
 
-        @self.on_import_decorator_helper('os.path')
         def on_os_path_import(module):
             nonlocal triggered
             triggered = True
+        self.on_import_direct_func_helper('os.path', on_os_path_import)
 
         self.assertTrue(triggered)
 
@@ -173,10 +173,10 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         """
         triggered = False
 
-        @self.on_import_decorator_helper('ctypes.util')
         def on_ctypes_util_import(module):
             nonlocal triggered
             triggered = True
+        self.on_import_direct_func_helper('ctypes.util', on_ctypes_util_import)
 
         import ctypes.util  # noqa
         self.assertTrue(triggered)
@@ -185,10 +185,10 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         # When we add a new hook, it should be triggered immediately
         triggered = False
 
-        @self.on_import_decorator_helper('ctypes.util')
         def on_ctypes_util_import2(module):
             nonlocal triggered
             triggered = True
+        self.on_import_direct_func_helper('ctypes.util', on_ctypes_util_import2)
 
         self.assertTrue(triggered)
 
@@ -197,10 +197,10 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         # simple case
         triggered_str = ''
 
-        @self.on_import_decorator_helper('hashlib')
         def on_hashlib_import(module):
             nonlocal triggered_str
             triggered_str = module.module_name
+        self.on_import_direct_func_helper('hashlib', on_hashlib_import)
 
         import hashlib  # noqa
         self.assertEqual(triggered_str, 'hashlib')
@@ -208,22 +208,22 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         # hook imported module
         triggered_str = ''
 
-        @self.on_import_decorator_helper('hashlib')
         def on_hashlib_import2(module):
             nonlocal triggered_str
             triggered_str = module.module_name
+        self.on_import_direct_func_helper('hashlib', on_hashlib_import2)
 
         self.assertEqual(triggered_str, 'hashlib')
 
-    def test_chain_decorators(self):
-        """ Test that multiple on_import decorators can be chained """
+    def test_multiple_register(self):
+        """ Test that multiple on_import hooks can be registered """
         triggered_cnt = 0
 
-        @self.on_import_decorator_helper('hashlib')
-        @self.on_import_decorator_helper('os')
-        def on_import():
+        def on_hashlib_import():
             nonlocal triggered_cnt
             triggered_cnt += 1
+        self.on_import_direct_func_helper('hashlib', on_hashlib_import)
+        self.on_import_direct_func_helper('os', on_hashlib_import)
 
         import hashlib  # noqa
         self.assertEqual(triggered_cnt, 1)
@@ -231,15 +231,14 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         import os  # noqa
         self.assertEqual(triggered_cnt, 2)
 
-    def test_chain_decorators2(self):
-        """ Test that multiple on_import decorators can be chained """
+    def test_multiple_register2(self):
         triggered_set = []
 
-        @self.on_import_decorator_helper('hashlib')
-        @self.on_import_decorator_helper('os')
-        def on_import(module):
+        def on_hashlib_import(module):
             nonlocal triggered_set
             triggered_set.append(module.module_name)
+        self.on_import_direct_func_helper('hashlib', on_hashlib_import)
+        self.on_import_direct_func_helper('os', on_hashlib_import)
 
         import hashlib  # noqa
         self.assertEqual(sorted(triggered_set), ['hashlib'])
@@ -247,20 +246,20 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         import os  # noqa
         self.assertEqual(sorted(triggered_set), ['hashlib', 'os'])
 
-    def test_chain_decorators3(self):
-        """ Test that multiple on_import decorators can be chained
-        Case: multiple decorators for the same module
+    def test_multiple_register3(self):
+        """ Test that multiple on_import hooks can be registered
+        @note: The same hook function can be registered multiple
         """
         triggered_set = []
 
-        @self.on_import_decorator_helper('hashlib')
-        @self.on_import_decorator_helper('hashlib')
-        @self.on_import_decorator_helper('os')
-        @self.on_import_decorator_helper('os')
-        @self.on_import_decorator_helper('os')
         def on_import(module):
             nonlocal triggered_set
             triggered_set.append(module.module_name)
+        self.on_import_direct_func_helper('hashlib', on_import)
+        self.on_import_direct_func_helper('hashlib', on_import)
+        self.on_import_direct_func_helper('os', on_import)
+        self.on_import_direct_func_helper('os', on_import)
+        self.on_import_direct_func_helper('os', on_import)
 
         import hashlib  # noqa
         self.assertEqual(sorted(triggered_set), ['hashlib', 'hashlib'])
@@ -271,14 +270,14 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
     def test_exceptions_handling(self):
         """ Test that exceptions are raised when invalid parameters are passed """
         # pass a not-callable object
-        with self.assertRaises(TypeError, msg='The parameter `func` must be callable'):
-            self.on_import_decorator_helper('hashlib', 'not_callable')  # noqa
+        with self.assertRaisesRegex(TypeError, 'The parameter `func` must be a callable'):
+            self.on_import_direct_func_helper('test', 'not callable')  # noqa
 
         # the hook function has more than 1 parameter
         with self.assertRaises(ValueError, msg='Invalid callback function: on_hashlib_import'):
-            @self.on_import_decorator_helper('hashlib')
             def on_hashlib_import(module, extra_param):
                 pass
+            self.on_import_direct_func_helper('hashlib', on_hashlib_import)
 
             import hashlib  # noqa
 
@@ -287,11 +286,11 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
 
         triggered = False
 
-        # use the original `@on_import` decorator
-        @ihook.on_import('Hashlib')
+        # use the original `on_import`
         def on_hashlib_import():
             nonlocal triggered
             triggered = True
+        ihook.on_import('Hashlib', on_hashlib_import)
 
         import hashlib  # noqa
         self.assertFalse(triggered)
@@ -300,10 +299,11 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         """ Test the behaviour if importing __main__ """
         triggered = False
 
-        @self.on_import_decorator_helper('__main__')
         def on_main_import():
             nonlocal triggered
             triggered = True
+        ihook.on_import('__main__', on_main_import)
+
 
         import __main__  # noqa
         self.assertTrue(triggered)
@@ -317,7 +317,6 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
 
         import hashlib
 
-        @self.on_import_decorator_helper('hashlib')
         def on_hashlib_import(module):
             # test iter
             nonlocal hashlib
@@ -325,6 +324,7 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
             module_obj, module_name = module
             self.assertEqual(module_name, 'hashlib')
             self.assertEqual(module_obj, hashlib)
+        self.on_import_direct_func_helper('hashlib', on_hashlib_import)
 
 
 class TestCaseSensitiveParams(TestSimpleCases):

@@ -32,7 +32,7 @@ class TestNamespacePackageImport(unittest.TestCase, ISensitiveConfigMixin):
         """ Test that on_import will trigger when the namespace package is imported """
         triggered_a = triggered_b = False
 
-        @self.on_import_helper('package.a')
+        @self.on_import_decorator_helper('package.a')
         def on_package_a_import():
             nonlocal triggered_a
             triggered_a = True
@@ -41,7 +41,7 @@ class TestNamespacePackageImport(unittest.TestCase, ISensitiveConfigMixin):
         self.assertTrue(triggered_a)
         self.assertFalse(triggered_b)
 
-        @self.on_import_helper('package.b')
+        @self.on_import_decorator_helper('package.b')
         def on_package_b_import():
             nonlocal triggered_b
             triggered_b = True
@@ -53,7 +53,7 @@ class TestNamespacePackageImport(unittest.TestCase, ISensitiveConfigMixin):
         """ Test that on_import will trigger when the module is imported via importlib.import_module """
         triggered_a = triggered_b = False
 
-        @self.on_import_helper('package.a')
+        @self.on_import_decorator_helper('package.a')
         def on_package_a_import():
             nonlocal triggered_a
             triggered_a = True
@@ -63,7 +63,7 @@ class TestNamespacePackageImport(unittest.TestCase, ISensitiveConfigMixin):
         self.assertTrue(triggered_a)
         self.assertFalse(triggered_b)
 
-        @self.on_import_helper('package.b')
+        @self.on_import_decorator_helper('package.b')
         def on_package_b_import():
             nonlocal triggered_b
             triggered_b = True
@@ -75,7 +75,7 @@ class TestNamespacePackageImport(unittest.TestCase, ISensitiveConfigMixin):
         """ Test that on_import will trigger when the module is reloaded via importlib.reload """
         triggered_cnt_a = triggered_cnt_b =  0
 
-        @self.on_import_helper('package.a')
+        @self.on_import_decorator_helper('package.a')
         def on_package_a_import():
             nonlocal triggered_cnt_a
             triggered_cnt_a += 1
@@ -87,7 +87,7 @@ class TestNamespacePackageImport(unittest.TestCase, ISensitiveConfigMixin):
         self.assertEqual(triggered_cnt_a, 2)
         self.assertEqual(triggered_cnt_b, 0)
 
-        @self.on_import_helper('package.b')
+        @self.on_import_decorator_helper('package.b')
         def on_package_b_import():
             nonlocal triggered_cnt_b
             triggered_cnt_b += 1
