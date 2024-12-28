@@ -6,8 +6,8 @@ import typing
 import sys
 import inspect
 
-# todo: unpatch支持前面已经patch的模块后续不再hook
-# todo: 单元测试完善自定义loader
+# todo: unpatch support for previously patched modules to prevent further hooks
+# todo: unit tests to improve custom loader
 
 __all__ = [
     # types
@@ -150,7 +150,7 @@ class Registry:
             self._case_insensitive_registry[lower_module_name].append(func)
 
             # Call the hook if the module is already imported.
-            for module in sys.modules:
+            for module in list(sys.modules.keys()):
                 if module.lower() == lower_module_name:
                     _call_helper(func, sys.modules[module])
 
