@@ -327,5 +327,5 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
             self.assertEqual(module_obj, hashlib)
 
 
-class TestCaseSensitiveParams(TestSimpleCases):
-    case_sensitive = True
+class TestCaseInsensitiveParams(TestSimpleCases):
+    case_sensitive = False

@@ -1,10 +1,11 @@
 import unittest
 import ihook
-from tests.utils import unimport
+from tests.utils import unimport, ISensitiveConfigMixin
 
 
-class TestImportPyQt6(unittest.TestCase):
+class TestImportPyQt6(unittest.TestCase, ISensitiveConfigMixin):
     """ Test cases for third-party module PyQt6 """
+    case_sensitive = True
 
     def setUp(self):
         unimport('PyQt6')
@@ -19,7 +20,7 @@ class TestImportPyQt6(unittest.TestCase):
         """ Test that on_import will trigger when the module is imported """
         triggered = False
 
-        @ihook.on_import('PyQt6')
+        @self.on_import_decorator_helper('PyQt6')
         def on_import_PyQt6():
             nonlocal triggered
             triggered = True
@@ -31,7 +32,7 @@ class TestImportPyQt6(unittest.TestCase):
         """ Test that on_import will trigger when the sub-package is imported """
         triggered = False
 
-        @ihook.on_import('PyQt6.QtCore')
+        @self.on_import_decorator_helper('PyQt6.QtCore')
         def on_import_PyQt6_QtCore():
             nonlocal triggered
             triggered = True
@@ -43,12 +44,12 @@ class TestImportPyQt6(unittest.TestCase):
         """ Test that on_import will trigger when the module is imported """
         triggered = 0
 
-        @ihook.on_import('PyQt6')
+        @self.on_import_decorator_helper('PyQt6')
         def on_import_PyQt6():
             nonlocal triggered
             triggered += 1
 
-        @ihook.on_import('PyQt6')
+        @self.on_import_decorator_helper('PyQt6')
         def on_import_PyQt6_2():
             nonlocal triggered
             triggered += 1
@@ -56,7 +57,7 @@ class TestImportPyQt6(unittest.TestCase):
         import PyQt6  # noqa
         self.assertEqual(triggered, 2)
 
-        @ihook.on_import('PyQt6')
+        @self.on_import_decorator_helper('PyQt6')
         def on_import_PyQt6_3():
             nonlocal triggered
             triggered += 1
@@ -67,12 +68,12 @@ class TestImportPyQt6(unittest.TestCase):
         """ Test that on_import will trigger when the sub-package is imported """
         triggered = 0
 
-        @ihook.on_import('PyQt6.QtCore')
+        @self.on_import_decorator_helper('PyQt6.QtCore')
         def on_import_PyQt6_QtCore():
             nonlocal triggered
             triggered += 1
 
-        @ihook.on_import('PyQt6.QtCore')
+        @self.on_import_decorator_helper('PyQt6.QtCore')
         def on_import_PyQt6_QtCore_2():
             nonlocal triggered
             triggered += 1
@@ -80,7 +81,7 @@ class TestImportPyQt6(unittest.TestCase):
         import PyQt6.QtCore  # noqa
         self.assertEqual(triggered, 2)
 
-        @ihook.on_import('PyQt6.QtCore')
+        @self.on_import_decorator_helper('PyQt6.QtCore')
         def on_import_PyQt6_QtCore_3():
             nonlocal triggered
             triggered += 1
@@ -88,3 +89,6 @@ class TestImportPyQt6(unittest.TestCase):
         self.assertEqual(triggered, 3)
 
 
+class TestImportPyQt6CaseInsensitive(TestImportPyQt6):
+    """ Test cases for third-party module PyQt6 for case-insensitive cases """
+    case_sensitive = False

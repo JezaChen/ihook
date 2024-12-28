@@ -327,5 +327,5 @@ class TestSimpleCases(unittest.TestCase, ISensitiveConfigMixin):
         self.on_import_direct_func_helper('hashlib', on_hashlib_import)
 
 
-class TestCaseSensitiveParams(TestSimpleCases):
-    case_sensitive = True
+class TestCaseInsensitiveParams(TestSimpleCases):
+    case_sensitive = False
