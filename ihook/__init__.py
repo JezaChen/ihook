@@ -73,7 +73,7 @@ class ModuleInfo:
 
     def __iter__(self):
         """ Convenient method to unpack the module info. """
-        return self.module_object, self.module_name
+        return iter((self.module_object, self.module_name))
 
     @classmethod
     def from_module(cls, module: types.ModuleType):
@@ -136,7 +136,7 @@ class Registry:
 
     def register(self, module_name: str, func: HOOK_CALLBACK_FUNC, *, case_sensitive: bool = True):
         if not callable(func):
-            raise TypeError('`func` must be callable')
+            raise TypeError('The parameter `func` must be a callable')
 
         if case_sensitive:
             self._case_sensitive_registry[module_name].append(func)
@@ -155,7 +155,7 @@ class Registry:
                     _call_helper(func, sys.modules[module])
 
     def __repr__(self):
-        return f'{self.__class__.__name__}'
+        return f'{self.__class__.__name__}()'
 
 
 _registry = Registry()
