@@ -97,6 +97,20 @@ import ihook
 ihook.clear_hooks()  # This will clear all registered hooks
 ```
 
+### Un-patching
+
+If you want to disable the hooking mechanism, you can use `unpatch_meta_path` to restore the original import mechanism.
+This function **does not remove the registered hooks but disables the hooking mechanism**.
+
+```python
+import ihook
+
+ihook.unpatch_meta_path()  # This will restore the original import mechanism
+```
+
+You can use `patch_meta_path` to re-enable the hooking mechanism. The registered hooks will still be available.
+
+
 ## Advanced Usage
 
 ### Handling Importlib

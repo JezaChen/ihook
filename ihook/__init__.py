@@ -6,7 +6,6 @@ import typing
 import sys
 import inspect
 
-# todo: unpatch support for previously patched modules to prevent further hooks
 # todo: unit tests to improve custom loader
 
 __all__ = [
@@ -20,6 +19,9 @@ __all__ = [
     'on_import',
     'clear_hooks',
     'current_patch_method',
+    'patch_meta_path',
+    'unpatch_meta_path',
+    'is_patched',
 
     # type hints
     'CALLBACK_FUNC_WITH_NO_PARAMS',
@@ -28,6 +30,7 @@ __all__ = [
 ]
 
 _HOOKED_MARK = '__hooked__'
+_ORIG_MARK = '__orig__'
 
 
 class PatchMethods(enum.Enum):
@@ -127,11 +130,11 @@ class Registry:
         """ Call the hooks for the given module. """
         module_name = _get_module_name(module)
         # First, call the hooks by the exact module name.
-        for func in self._case_sensitive_registry[module_name]:
+        for func in self._case_sensitive_registry.get(module_name, []):
             _call_helper(func, module)
 
         # Second, call the hooks which are registered with the case-insensitive module name.
-        for func in self._case_insensitive_registry[module_name.lower()]:
+        for func in self._case_insensitive_registry.get(module_name.lower(), []):
             _call_helper(func, module)
 
     def register(self, module_name: str, func: HOOK_CALLBACK_FUNC, *, case_sensitive: bool = True):
@@ -166,7 +169,7 @@ def _call_module_hooks(module: types.ModuleType):
     _registry.call_hooks(module)
 
 
-def HookedLoader(loader):
+def _hook_loader(loader):
     """ Patch the loader to call the hooks when the module is executed. """
 
     # The `exec_module` and `create_module` methods are the recommended methods for loading modules.
@@ -200,14 +203,31 @@ def HookedLoader(loader):
         return wrapper
 
     if hasattr(loader, 'exec_module') and not getattr(loader.exec_module, _HOOKED_MARK, False):
-        loader.exec_module = patch_exec_module(loader.exec_module)
+        original_exec_module = loader.exec_module
+        setattr(loader, 'exec_module', patch_exec_module(original_exec_module))
+        setattr(loader.exec_module, _ORIG_MARK, original_exec_module)
+
     if hasattr(loader, 'load_module') and not getattr(loader.load_module, _HOOKED_MARK, False):
-        loader.load_module = patch_load_module(loader.load_module)
+        original_load_module = loader.load_module
+        setattr(loader, 'load_module', patch_load_module(original_load_module))
+        setattr(loader.load_module, _ORIG_MARK, original_load_module)
 
     return loader
 
 
-def patch_finder(finder):
+def _unhook_loader(loader: 'LoaderProtocol'):
+    """ Unpatch the loader to remove the hooks. """
+    if hasattr(loader, 'exec_module') and hasattr(loader.exec_module, _ORIG_MARK):
+        original_exec_module = getattr(loader.exec_module, _ORIG_MARK)
+        setattr(loader, 'exec_module', original_exec_module)
+
+    if hasattr(loader, 'load_module') and hasattr(loader.load_module, _ORIG_MARK):
+        original_load_module = getattr(loader.load_module, _ORIG_MARK)
+        setattr(loader, 'load_module', original_load_module)
+
+    return loader
+
+def _patch_finder(finder):
     """ Patch the meta finder to patch the loader when the module is imported.
       And the patched loader will call the hooks when the module is executed
     :param finder: The finder to patch.
@@ -224,7 +244,7 @@ def patch_finder(finder):
             spec = find_spec(fullname, path, target=target)
             # For namespace packages, the spec.loader is None.
             if spec is not None and spec.loader is not None:
-                spec.loader = HookedLoader(spec.loader)
+                spec.loader = _hook_loader(spec.loader)
             return spec
 
         return wrapper
@@ -240,7 +260,7 @@ def patch_finder(finder):
             loader = find_module(fullname, path)
             if loader is None:  # Handle the case when the loader is None (namespace packages).
                 return None
-            return HookedLoader(loader)
+            return _hook_loader(loader)
 
         return wrapper
 
@@ -249,33 +269,32 @@ def patch_finder(finder):
         setattr(finder, 'find_spec', wrap_find_spec(original_find_spec))
         # Now, the `finder.find_spec` is patched with the wrapper function.
         # Save the original fin`d`_spec method.
-        setattr(finder.find_spec, '_orig', original_find_spec)
+        setattr(finder.find_spec, _ORIG_MARK, original_find_spec)
 
     if hasattr(finder, 'find_module'):
         original_find_module = finder.find_module
         setattr(finder, 'find_module', wrap_find_module(original_find_module))
         # Now, the `finder.find_module` is patched with the wrapper function.
         # Save the original `find_module` method.
-        setattr(finder.find_module, '_orig', original_find_module)
+        setattr(finder.find_module, _ORIG_MARK, original_find_module)
 
     setattr(finder, _HOOKED_MARK, True)
     return finder
 
 
 def _unpatch_finder(finder):
-    if not getattr(finder, _HOOKED_MARK, False):
-        # Not patched
+    if not getattr(finder, _HOOKED_MARK, False):  # Not patched
         return finder
 
-    if hasattr(finder, 'find_spec') and hasattr(finder.find_spec, '_orig'):
-        original_find_spec = getattr(finder.find_spec, '_orig')
+    if hasattr(finder, 'find_spec') and hasattr(finder.find_spec, _ORIG_MARK):
+        original_find_spec = getattr(finder.find_spec, _ORIG_MARK)
         setattr(finder, 'find_spec', original_find_spec)
 
     if hasattr(finder, 'find_module'):
-        original_find_module = getattr(finder.find_module, '_orig')
+        original_find_module = getattr(finder.find_module, _ORIG_MARK)
         setattr(finder, 'find_module', original_find_module)
 
-    setattr(finder, _HOOKED_MARK, False)
+    delattr(finder, _HOOKED_MARK)
     return finder
 
 
@@ -288,23 +307,35 @@ class HookMetaPaths(list):
     __hooked__ = True  # Hook mark
 
     def __init__(self, finders):
-        super(HookMetaPaths, self).__init__([patch_finder(f) for f in finders])
+        if hasattr(finders, _HOOKED_MARK):  # Already patched
+            return
+
+        super(HookMetaPaths, self).__init__([_patch_finder(f) for f in finders])
 
     def __setitem__(self, key, val):
         """ When setting a new finder, patch it. """
-        super(HookMetaPaths, self).__setitem__(key, patch_finder(val))
+        super(HookMetaPaths, self).__setitem__(key, _patch_finder(val))
 
     def append(self, finder):
         """ When appending a new finder, patch it. """
-        super(HookMetaPaths, self).append(patch_finder(finder))
+        super(HookMetaPaths, self).append(_patch_finder(finder))
 
     def extend(self, finders):
         """ When extending new finders, patch them. """
-        super(HookMetaPaths, self).extend([patch_finder(f) for f in finders])
+        super(HookMetaPaths, self).extend([_patch_finder(f) for f in finders])
 
     def insert(self, index, finder):
         """ When inserting a new finder, patch it. """
-        super(HookMetaPaths, self).insert(index, patch_finder(finder))
+        super(HookMetaPaths, self).insert(index, _patch_finder(finder))
+
+
+def _unhook_all_modules():
+    """ Unhook all the modules whose loaders are patched during importing.
+    """
+    for module in list(sys.modules.values()):
+        if hasattr(module, '__loader__'):
+            loader = module.__loader__
+            _unhook_loader(loader)
 
 
 # === APIs === #
@@ -323,6 +354,11 @@ def unpatch_meta_path():
         # Not patched
         return
     sys.meta_path = [_unpatch_finder(f) for f in sys.meta_path]
+
+
+def is_patched() -> bool:
+    """ Check whether the `sys.meta_path` is patched. """
+    return hasattr(sys.meta_path, _HOOKED_MARK)
 
 
 @typing.overload
@@ -404,6 +440,9 @@ def clear_hooks():
     """
     global _registry
     _registry = Registry()
+
+    # remember to unhook all the hooked modules
+    _unhook_all_modules()
 
 
 def current_patch_method() -> PatchMethods:
