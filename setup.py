@@ -8,7 +8,7 @@ def get_description():
 
 setup(
     name="ihook",
-    version="0.1.1",
+    version="0.2",
     url="https://github.com/JezaChen/ihook",
     author="Jianzhang Chen",
     author_email="jezachen@163.com",
