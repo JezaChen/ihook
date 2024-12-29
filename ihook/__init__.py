@@ -6,6 +6,9 @@ import typing
 import sys
 import inspect
 
+if typing.TYPE_CHECKING:
+    from _typeshed.importlib import LoaderProtocol
+
 # todo: unit tests to improve custom loader
 
 __all__ = [
